@@ -66,3 +66,104 @@ sum 和 reduce 的通用思想是把某个操作连续应用到序列的元素�
 #### 3.匿名函数  
 为了使用高阶函数，有时创建一次性的小型函数更便利， 这便是匿名函数的由来。
 
+lamda函数就是在python表达式内创建匿名函数，但由于句法的限制，lambda函数的定义体只能用纯表达式。
+
+"Functional Programming HOWTO" 中提到，如果使用lambda表达式使得代码难以理解，建议按下面的步骤重构:
+
+- 编写注释，说明lambda表达式的作用       
+- 研究注释，用一个名称概括       
+- 用这个名称定义一个函数，把lambda表达式转换成这个函数    
+- 删除注释
+
+#### 4.可调用对象
+Python 的数据模型文档指出了7种可调用对象：
+- 用户定义的函数:   
+    使用lambda表达式或者def语句创建  
+- 内置函数: 
+    使用CPython实现的函数   
+- 内置方法:
+    使用C语言实现的方法   
+- 方法:
+    类的定义题中实现的函数   
+- 类:
+    调用时会创建一个实例，然后执行构造函数
+- 类的实例:
+    如果类定义了\_\_call\_\_方法，那么它的实例可以作为函数调用。  
+- 生成器函数:
+    使用了yeild关键字的函数或方法, 返回生成器对象。
+
+#### 5.用户定义的可调用类型
+不仅python函数式对象，对象也可以表现得像函数，只需要实现方法\_\_call\_\_。
+
+```python
+
+import random
+class BingoCage:
+    def __init__(self, items):
+        self._items = list(items)
+        random.shuffle(self._items)
+    def pick(self):
+        try:
+            return self._items.pop()
+        except IndexError:
+            raise LookupError('pick from empty BingoCage')
+    def __call__(self):
+        return self.pick()
+
+```
+这样调用BingoCage的实例时，效果和调用pick方法一样。  
+
+实现 \_\_call\_\_ 方法的类是创建函数类对象的简便方式，此时必须在内部维护一个状态，让它在调用之间可用，例如 BingoCage 中的剩余元素。装饰器就是这样。装饰器必须是函数，而且有时要在多次调用之间“记住”某些事 [ 例如备忘（memoization），即缓存消耗大的计算结果，供后面使用 ]。
+
+创建保有内部状态的函数，还有一种截然不同的方式 —— 使用闭包。
+
+#### 6. 从定位参数到仅限关键字参数    
+Python提供了极为灵活的参数处理机制，Python3提供了 keyword-only argument。调用函数时使用*和**展开可迭代对象，映射到单个参数。  
+
+下面的例子中，tag函数用于生成html标签
+
+```python
+
+def tag(name, *content, cls=None, **attrs):
+    """生成一个或多个HTML标签"""
+    if cls is not None:
+        attrs['class'] = cls
+    if attrs:
+        attr_str = ''.join(' %s="%s"' % (attr, value)
+                        for attr, value in sorted(attrs.items()))
+    else:
+        attr_str = ''
+    if content:
+        return '\n'.join('<%s%s>%s</%s>' %
+                (name, attr_str, c, name) for c in content)
+    else:
+        return '<%s%s />' % (name, attr_str)
+
+```
+
+下面是这个函数的几种调用方式
+
+```python
+
+>>> tag('br')
+'<br />'
+>>> tag('p', 'hello')
+'<p>hello</p>'
+>>> print(tag('p', 'hello', 'world'))
+<p>hello</p>
+<p>world</p>
+>>> tag('p', 'hello', id=33)
+'<p id="33">hello</p>'
+>>> print(tag('p', 'hello', 'world', cls='sidebar'))
+<p class="sidebar">hello</p>
+<p class="sidebar">world</p>
+>>> tag(content='testing', name="img")
+'<img content="testing" />'
+>>> my_tag = {'name': 'img', 'title': 'Sunset Boulevard',
+... 'src': 'sunset.jpg', 'cls': 'framed'}
+>>> tag(**my_tag)
+'<img class="framed" src="sunset.jpg" title="Sunset Boulevard" />'
+
+```
+
+#### 7. 获取关于参数的信息。

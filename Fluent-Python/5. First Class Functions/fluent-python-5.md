@@ -166,4 +166,19 @@ def tag(name, *content, cls=None, **attrs):
 
 ```
 
-#### 7. 获取关于参数的信息。
+#### 7. 获取关于参数的信息    
+这里举一个处理web请求的例子: 
+
+```python
+
+import bobo
+@bobo.query('/')
+def hello(person):
+    return 'Hello %s!' % person
+
+```
+在上面这段代码中，bobo是一个web微框架，bobo.query()装饰器将hello()函数与请求处理机制结合在一起，使得hello()自动接收请求中的person作为参数，若没有person参数，则返回403.
+
+函数对象有个 \_\_defaults\_\_ 属性，它的值是一个元组，里面保存着定位参数和关键字参数的默认值。仅限关键字参数的默认值在 \_\_kwdefaults\_\_ 属性中。然而，参数的名称在 \_\_code\_\_ 属性中，它的值是一个 code 对象引用，自身也有很多属性。
+
+

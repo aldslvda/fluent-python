@@ -118,7 +118,7 @@ class BingoCage:
 创建保有内部状态的函数，还有一种截然不同的方式 —— 使用闭包。
 
 #### 6. 从定位参数到仅限关键字参数    
-Python提供了极为灵活的参数处理机制，Python3提供了 keyword-only argument。调用函数时使用*和**展开可迭代对象，映射到单个参数。  
+Python提供了极为灵活的参数处理机制，Python3提供了 keyword-only argument。调用函数时使用*和*展开可迭代对象，映射到单个参数。  
 
 下面的例子中，tag函数用于生成html标签
 
@@ -181,5 +181,134 @@ def hello(person):
 
 函数对象有个 \_\_defaults\_\_ 属性，它的值是一个元组，里面保存着定位参数和关键字参数的默认值。仅限关键字参数的默认值在 \_\_kwdefaults\_\_ 属性中。然而，参数的名称在 \_\_code\_\_ 属性中，它的值是一个 code 对象引用，自身也有很多属性。
 
-下面举一个
+下面举一个[clip.py](https://github.com/aldslvda/readings/blob/master/Fluent-Python/5.%20First%20Class%20Functions/clip.py)的例子，讲解函数对象用于获取参数信息的属性。
 
+```python
+
+def clip(text, max_len=80):
+    """在max_len前面或后面的第一个空格处截断文本
+    """
+    end = None
+    if len(text) > max_len:
+        space_before = text.rfind(' ', 0, max_len)
+        if space_before >= 0:
+            end = space_before
+        else:
+            space_after = text.rfind(' ', max_len)
+        if space_after >= 0:
+            end = space_after
+            if end is None: # 没找到空格
+                end = len(text)
+    return text[:end].rstrip()
+
+```
+
+我们在控制台输入下面的命令，查看属性
+
+```python
+
+>>> from clip import clip
+>>> clip.__defaults__
+(80,)
+>>> clip.__code__
+<code object clip at 0x10dadcc90, file "/Users/NickAl/study/github/readings/Fluent-Python/5. First Class Functions/clip.py", line 2>
+>>> clip.__code__.co_varnames
+('text', 'max_len', 'end', 'space_before', 'space_after')
+>>> clip.__code__.co_argcount
+2
+
+```
+
+参数名称在 \_\_code\_\_.co\_varnames中，不过里面还有函数定义体中创建的局部变量。因此，参数名称是前 N 个字符串，N的值由 \_\_code\\_.co\_argcount 确定。顺便说一下，这里不包含前缀为 * 或 ** 的长度可变的参数。参数的默认值只能通过它们在 \_\_defaults\_\_ 元组中的位置确定，因此要从后向前扫描才能把参数和默认值对应起来。
+
+另一种查看属性的方式是，使用inspect 模块
+
+```python
+>>> from clip import clip
+>>> from inspect import signature
+>>> sig = signature(clip)
+>>> sig
+<Signature (text, max_len=80)>
+>>> for name, param in sig.parameters.items():
+...     print(param.kind, ':', name, '=', param.default)
+...
+POSITIONAL_OR_KEYWORD : text = <class 'inspect._empty'>
+POSITIONAL_OR_KEYWORD : max_len = 80
+
+```
+
+inspect.signature 函数返回一个 inspect.Signature 对象，它有一个 parameters 属性，这是一个有序映射，把参数名和 inspect.Parameter 对象对应起来。
+
+inspect.Signature的kind属性有下面5种:
+
+- POSITIONAL\_OR\_KEYWORD:可以通过定位参数和关键字参数传入的形参（多数 Python 函数的参数属于此类）。
+- VAR\_POSITIONAL:定位参数元组。
+- VAR\_KEYWORD:关键字参数字典。
+- KEYWORD\_ONLY:仅限关键字参数（Python 3 新增）。
+- POSITIONAL\_ONLY:仅限定位参数；目前，Python 声明函数的句法不支持，但是有些使用 C 语言实现且不接受关键字参数的函数（如 divmod）支持。
+
+#### 8. 函数注解
+
+Python 3 提供了一种句法，用于为函数声明中的参数和返回值附加元数据, 这就是注解。
+在clip.py中声明一个新的函数clip\_with\_anno, 只在声明时加入注解，其他一样。
+
+```python
+
+def clip_with_anno(text:str, max_len: 'int > 0' = 80) -> str:
+
+```
+
+```python
+
+>>> from clip import clip_with_anno
+>>> clip_with_anno.__annotations__
+{'text': <class 'str'>, 'max_len': 'int > 0', 'return': <class 'str'>}
+
+```
+
+注解和参数、返回值的对应关系一目了然。然而Python本身对注解没有任何操作。
+
+#### 9. Python标准库中为支持函数式编程提供的包
+
+##### 9.1 operator模块
+下面展示了使用reduce计算阶乘的两种方式，区别是是否使用了operator库。
+
+```python
+
+from functools import reduce
+from operator import mul
+
+def fact(n):
+    return reduce(lambda a, b: a*b, range(1, n+1))
+def fact_with_mul(n):
+    return reduce(mul, range(1, n+1))
+
+```
+
+上面的例子使用mul避免了lambda表达式的使用。
+operator还提供了一些有效的函数:
+
+- attrgetter 与 itemgetter这样获取对象属性和可迭代对象的元素的函数。
+- methodcaller 创建的函数会在对象上调用参数指定的方法
+
+##### 9.2 functools.partial
+functools.partial 这个高阶函数用于**部分应用**一个函数。部分应用是指，基于一个函数创建一个新的可调用对象，把原函数的某些参数固定。使用这个函数可以把接受一个或多个参数的函数改编成需要回调的 API，这样参数更少.
+
+```python
+
+>>> from operator import mul
+>>> from functools import partial
+>>> triple = partial(mul, 3)
+>>> triple(7)
+21
+>>> list(map(triple, range(1, 10)))
+[3, 6, 9, 12, 15, 18, 21, 24, 27]
+
+```
+
+#### 10. 小结
+这一小节主要讲了Python函数的一等性质，即函数也是对象这一概念，并说明了这一性质的一部分应用场景，以及功能有限的lambda函数的一些替代方式。
+
+高强度加班了两周，终终终终于有时间吧这章看完啦![1](https://github.com/aldslvda/blog-images/blob/master/acfun_emoji/01.png?raw=true)
+
+To be continued ... 敬请期待![1](https://github.com/aldslvda/blog-images/blob/master/acfun_emoji/25.png?raw=true)

@@ -7,8 +7,8 @@ class LineItem:
         self.product = product
         self.quantity = quantity
         self.price = price
-def total(self):
-    return self.price * self.quantity
+    def total(self):
+        return self.price * self.quantity
 class Order: # 上下文
     def __init__(self, customer, cart, promotion=None):
         self.customer = customer
@@ -30,8 +30,8 @@ class Order: # 上下文
 class Promotion(ABC) : # 策略：抽象基类
     @abstractmethod
     def discount(self, order):
-    """返回折扣金额（正值）"""
-    
+        """返回折扣金额（正值）"""
+
 class FidelityPromo(Promotion): # 第一个具体策略
     """为积分为1000或以上的顾客提供5%折扣"""
     def discount(self, order):
@@ -50,4 +50,4 @@ class LargeOrderPromo(Promotion): # 第三个具体策略
         distinct_items = {item.product for item in order.cart}
         if len(distinct_items) >= 10:
             return order.total() * .07
-    return 0
+        return 0

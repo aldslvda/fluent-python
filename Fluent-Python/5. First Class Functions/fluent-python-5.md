@@ -312,3 +312,5 @@ functools.partial 这个高阶函数用于**部分应用**一个函数。部分�
 高强度加班了两周，终终终终于有时间吧这章看完啦![1](https://github.com/aldslvda/blog-images/blob/master/acfun_emoji/01.png?raw=true)
 
 To be continued ... 敬请期待![1](https://github.com/aldslvda/blog-images/blob/master/acfun_emoji/25.png?raw=true)
+
+ 

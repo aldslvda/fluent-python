@@ -26,5 +26,47 @@ Python的安装就不赘述了。
 > virtualenv venv
 > source my_env/bin/activate
 ```
-使用deactivate命令可以随时取消venv的激活状态。
+使用deactivate命令可以随时取消venv的激活状态。  
+另外,可以使用virtualenvwrapper对virtualenv进行管理,这个工具可以使创建和管理virtualenv变得更加容易。
 
+#### 1.2 使用pip安装Django
+进入venv, Shell中运行下面的命令即可:  
+
+```shell
+> pip install django
+```
+#### 1.3 创建一个Django Project
+运行下面的命令: 
+
+```shell
+> django-admin startproject aldsblog
+```
+
+这样我们得到了一个名为aldsblog的project,项目结构如下图所示（暴露了windows >_>：   
+![Figure-1-1](https://github.com/aldslvda/blog-images/blob/master/djangobyexample-1.1.png?raw=true)
+
+- manage.py: 用来和项目交互的命令行工具   
+- mysite/: 项目目录，包含下面的文件:       
+    - \_\_init\_\_.py: 空文件, 让Python 将项目文件夹看作一个module  
+    - settings.py: 项目的相关配置(有默认值).  
+    - urls.py: 定义url pattarn的文件, 每个url指向一个视图.  
+    - wsgi.py: 讲项目作为WSGI应用运行的一系列配置.
+
+自动生成的settings.py文件包含了：使用SQLite的基本设置, Django自动加入到项目中的一系列应用。   
+我们需要先为项目创建初始的数据表。
+
+由于我使用的数据库是mysql,所以要对默认的设置做出一些更改：
+
+```python   
+# in settings.py
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'aldsblog',
+        'USER': 'root',
+        'HOST': 'localhost',
+        'PASSWORD': 'root',
+        'PORT': '3306',
+        }
+}
+```

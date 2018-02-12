@@ -71,3 +71,79 @@ DATABASES = {
 }
 ```
 
+同时需要为python环境安装mysql驱动*mysqlclient*
+
+```shell  
+> pip install mysqlclient
+```
+
+运行下面的命令进行数据库迁移：
+
+```shell   
+> python manage.py migrate
+```
+控制台会打出log
+
+```    
+Operations to perform:
+  Apply all migrations: admin, auth, contenttypes, sessions
+Running migrations:
+  Applying contenttypes.0001_initial... OK
+  Applying auth.0001_initial... OK
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying contenttypes.0002_remove_content_type_name... OK
+  Applying auth.0002_alter_permission_name_max_length... OK
+  Applying auth.0003_alter_user_email_max_length... OK
+  Applying auth.0004_alter_user_username_opts... OK
+  Applying auth.0005_alter_user_last_login_null... OK
+  Applying auth.0006_require_contenttypes_0002... OK
+  Applying auth.0007_alter_validators_add_error_messages... OK
+  Applying auth.0008_alter_user_username_max_length... OK
+  Applying auth.0009_alter_user_last_name_max_length... OK
+  Applying sessions.0001_initial... OK
+
+```
+这时候数据库中已经自动生成一系列Django自带模块需要使用的表了。
+
+```sql  
+mysql> use aldsblog;
+Database changed
+mysql> show tables;
++----------------------------+
+| Tables_in_aldsblog         |
++----------------------------+
+| auth_group                 |
+| auth_group_permissions     |
+| auth_permission            |
+| auth_user                  |
+| auth_user_groups           |
+| auth_user_user_permissions |
+| django_admin_log           |
+| django_content_type        |
+| django_migrations          |
+| django_session             |
++----------------------------+
+10 rows in set (0.00 sec)
+```
+
+
+接下来运行下面的命令将服务器运行起来：
+
+```shell   
+> python manage.py runserver
+```
+
+我们就可以进入浏览器查看第一个项目了:
+
+![Figure-1-2 Django Project 初始界面](https://github.com/aldslvda/blog-images/blob/master/djangobyexample-1.2.png?raw=true)
+
+需要注意的是, 这个服务器并不适合作为生产环境, 如果在生产环境使用Django作为服务器,需要使用Apache, Gunicorn, 或者 uWSGI将它作为一个Web Server Gateway Interface (WSGI) application运行。
+
+#### 1.4 项目设置
+
+settings.py 的设置可以在[官方文档](https://docs.djangoproject.com/en/2.0/ref/settings/)中查看   
+
+下面这些是值得一看的设置   
+- DEBUG 是用来开关调试模式的布尔值，如果是True, Django会在页面上显示详细的错误页面和异常信息。在生产环境应该把它设置为False, 否则可能会泄露项目的敏感信息。  
+

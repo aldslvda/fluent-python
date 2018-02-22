@@ -147,3 +147,22 @@ settings.py 的设置可以在[官方文档](https://docs.djangoproject.com/en/2
 下面这些是值得一看的设置   
 - DEBUG 是用来开关调试模式的布尔值，如果是True, Django会在页面上显示详细的错误页面和异常信息。在生产环境应该把它设置为False, 否则可能会泄露项目的敏感信息。  
 
+- ALLOWED_HOSTS 在DEBUG模式是不会启用的, 一旦部署到生产环境，必须将主机的域名添加到这里才能正常作为服务端使用。
+
+- INSTALLED_APPS 告诉Django哪些app是启用的，默认启用下面的这些应用:
+
+    - django.contrib.admin: 管理页面.
+    - django.contrib.auth: 身份验证框架.
+    - django.contrib.contenttypes: 用来管理
+content type的框架
+    - django.contrib.sessions: Session框架
+    - django.contrib.messages: 消息框架.
+    -  django.contrib.staticfiles: 管理静态文件的框架.
+- MIDDLEWARE_CLASSES 一个包含即将执行的中间件的元组.
+- ROOT_URLCONF 告诉各个模块项目的根目录.
+- DATABASES DB设置
+- LANGUAGE_CODE 语言编码（en-us, zh-cn, ... etc.）
+
+#### 1.5 项目和应用(project and apps)
+
+对于Django 

@@ -191,5 +191,108 @@ class TwilightBus:
     def drop(self, name):
         self.passengers.remove(name)
 
+basketball_team = ['Sue', 'Tina', 'Maya', 'Diana', 'Pat']
+bus = TwilightBus(basketball_team)
+bus.drop('Tina')
+bus.drop('Pat')
+print(basketball_team)
+>>> ['Sue', 'Maya', 'Diana']
+
 ```
 
+可以看到当乘客从bus上下车后，同时也从篮球队中剔除了，这是不合理的，这是由于传入参数的时候，passengers 仅仅是作为basketball_team的别名而不是创建了一个新对象，这样对passengers的操作会影响到basketball_team
+
+解决办法如下(修改__init__函数)：
+
+```python
+def __init__(self, passengers=None):
+    if passengers is None:
+        self.passengers = []
+    else:
+        self.passengers = list(passengers)
+```
+
+这样不仅可以防止可变参数造成的影响，同时还能让passengers的类型更加灵活（任何可迭代的对象）
+
+#### 8.5 del和垃圾回收
+对象本身不会自行销毁，但当对象不能被获取时，可能会被当做垃圾回收。
+
+del 语句删除名称，而不是对象。del 命令可能会导致对象被当作垃圾回收，但是仅当删除的变量保存的是对象的最后一个引用，或者无法得到对象时。 重新绑定也可能会导致对象的引用数量归零，导致对象被销毁。
+
+在 CPython 中，垃圾回收使用的主要算法是引用计数。实际上，每个对象都会统计有多少引用指向自己。当引用计数归零时，对象立即就被销毁：CPython 会在对象上调用\_\_del\_\_ 方法（如果定义了），然后释放分配给对象的内存。CPython　2.0 增加了分代垃圾回收算法，用于检测引用循环中涉及的对象组——如果一组对象之间全是相互引用，即使再出色的引用方式也会导致组中的对象不可获取。
+_注： Python 的其他实现有更复杂的垃圾回收程序，而且不依赖引用计数，这意味着，对象的引用数量为零时可能不会立即调用\_\_del\_\_ 方法_
+
+下面的例子用weakref展示了一个对象生命周期结束时的场景：
+
+```python
+import weakref
+s1 = {1, 2, 3}
+s2 = s1
+def bye():
+    print('goodbye')
+ender = weakref.finalize(s1, bye)
+
+>>> ender.alive
+True
+>>> del s1
+>>> ender.alive
+True
+>>> s2 = 'sapm'
+goodbye
+>>> ender.alive
+False
+```
+
+#### 8.6 弱引用
+正是因为有引用，对象才会在内存中存在。
+
+弱引用不会增加对象的引用数量。引用的目标对象称为所指对象（referent）。因此我们说，弱引用不会妨碍所指对象被当作垃圾回收。
+
+弱引用在缓存应用中很有用，因为我们不想仅因为被缓存引用着而始终保存缓存对象。
+
+然而，weakref模块的文档指出，weakref.ref类其实是低层接口，供高级用途使用，多数程序最好使用 weakref 集合和 finalize。也就是说，应该使用 WeakKeyDictionary、WeakValueDictionary、WeakSet 和finalize（在内部使用弱引用），不要自己动手创建并处理 weakref.ref 实例。
+
+##### 8.6.1 WeakValueDictionary简介
+
+WeakValueDictionary 类实现的是一种可变映射，里面的值是对象的弱引用。被引用的对象在程序中的其他地方被当作垃圾回收后，对应的键会自动从 WeakValueDictionary中删除。因此，WeakValueDictionary 经常用于缓存。
+
+下面是一个例子：
+
+```python    
+class Cheese:
+    def __init__(self, kind):
+        self.kind = kind
+    def __repr__(self):
+        return 'Cheese(%r)' % self.kind
+
+>>> import weakref
+>>> stock = weakref.WeakValueDictionary()
+>>> catalog = [Cheese('Red Leicester'), Cheese('Tilsit'), Cheese('Brie'), Cheese('Parmesan')]
+>>> for cheese in catalog:
+... stock[cheese.kind] = cheese
+...
+>>> sorted(stock.keys())
+['Brie', 'Parmesan', 'Red Leicester', 'Tilsit']
+>>> del catalog
+>>> sorted(stock.keys())
+['Parmesan'] ➍
+>>> del cheese
+>>> sorted(stock.keys())
+[]
+
+```
+Parmesan 没有被删除仅仅是因为for循环中的cheese变量引用了它，这里的cheese是全局变量。
+
+##### 8.6.2 弱引用的局限
+
+不是每个 Python 对象都可以作为弱引用的目标（或称所指对象）。基本的 list 和 dict实例不能作为所指对象，但是它们的子类可以，int 和 tuple 实例不能作为弱引用的目标，甚至它们的子类也不行。
+
+#### 8.7 小结
+每个 Python 对象都有标识、类型和值。只有对象的值会不时变化。
+
+变量保存的是引用，这一点对 Python 编程有很多实际的影响。    
+- 简单的赋值不创建副本。  
+- 对 += 或 *= 所做的增量赋值来说，如果左边的变量绑定的是不可变对象，会创建新对象；如果是可变对象，会就地修改。   
+- 为现有的变量赋予新值，不会修改之前绑定的变量。这叫重新绑定：现在变量绑定了其他对象。如果变量是之前那个对象的最后一个引用，对象会被当作垃圾回收。   
+- 函数的参数以别名的形式传递，这意味着，函数可能会修改通过参数传入的可变对象。这一行为无法避免，除非在本地创建副本，或者使用不可变对象（例如，传入元组，而不传入列表）。   
+- 使用可变类型作为函数参数的默认值有危险，因为如果就地修改了参数，默认值也就变了，这会影响以后使用默认值的调用。

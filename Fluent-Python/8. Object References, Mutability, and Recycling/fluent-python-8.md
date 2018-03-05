@@ -34,7 +34,7 @@ True
 >>> lewis['balance'] = 950
 >>> charles
 {'name': 'Charles L. Dodgson', 'balance': 950, 'born': 1832}
->>> alex = {'name': 'Charles L. Dodgson', 'born': 1832, 'balance': 950} ➊
+>>> alex = {'name': 'Charles L. Dodgson', 'born': 1832, 'balance': 950}
 >>> alex == charles
 True
 >>> alex is not charles
@@ -275,7 +275,7 @@ class Cheese:
 ['Brie', 'Parmesan', 'Red Leicester', 'Tilsit']
 >>> del catalog
 >>> sorted(stock.keys())
-['Parmesan'] ➍
+['Parmesan']
 >>> del cheese
 >>> sorted(stock.keys())
 []

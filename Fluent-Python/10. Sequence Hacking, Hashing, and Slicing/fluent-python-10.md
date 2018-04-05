@@ -76,6 +76,30 @@ class Vector:
 ```
 但是这样实现的切片会存在一个问题， 就是切片得到的结果是数组而不是新的Vector类
 
-##### 
+##### 10.3.1 切片原理
 
+首先通过一个例子查看切片的原理:
+
+```python   
+>>> class MySeq:
+...     def __getitem__(self, index):
+...         return index
+... 
+>>> s = MySeq()
+>>> s[1]
+1
+>>> s[1:4]
+slice(1, 4, None)
+>>> s[1:4:2]
+slice(1, 4, 2)
+>>> s[1:4:2, 9]
+(slice(1, 4, 2), 9)
+>>> s[1:4:2, 7:9]
+(slice(1, 4, 2), slice(7, 9, None))
+
+```
+
+slice(1, 4, 2) 表示的是 从1开始, 到4结束, step是2(左开右闭)
+
+slice 有一个有趣的方法slice
 

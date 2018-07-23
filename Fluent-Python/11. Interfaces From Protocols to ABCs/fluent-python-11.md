@@ -22,7 +22,7 @@ Python 中接口的运作方式: Python 中没有interface 关键字， 并且�
 
 Python中数据模型的哲学是尽量支持基本协议， 下面的图展示了抽象基类Sequence的正式接口。
 
-![Figure-11-1](https://raw.githubusercontent.com/aldslvda/blog-images/master/fluent-python-11.1.jpg)
+![Figure-11-1](https://github.com/aldslvda/blog-images/blob/master/fluent-python-11.1.png?raw=true)
 
 如果没有实现\_\_iter\_\_和\_\_contains\_\_方法， Python会调用\_\_getitem\_\_方法， 设法让迭代和in运算符可用。几十一个对象只实现了\_\_getitem\_\_方法，也能进行迭代，为了迭代对象，解释器会尝试调用两个不同的方法。
 

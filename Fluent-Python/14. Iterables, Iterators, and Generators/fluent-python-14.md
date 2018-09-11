@@ -87,4 +87,108 @@ while True:
     
 这个接口在 collections.abc.Iterator 抽象基类中制定。这个类定义了 \_\_next\_\_ 抽象方法，而且继承自 Iterable 类；\_\_iter\_\_ 抽象方法则在 Iterable 类中定义。
 
+因为迭代器只有\_\_next\_\_ 和\_\_iter\_\_方法，所以迭代器没办法检查遗漏的元素和‘还原’迭代器， 如果想再次迭代， 还是需要传入被迭代的对象。由于Iterator.\_\_init\_\_是返回实例本身，传入迭代器无法还原已经迭代过的元素。
+
+#### 14.3 典型的迭代器
+
+这一节会将迭代器和可迭代对象分离开来，让我们更加清楚迭代器和可迭代对象的关系
+
+```python
+import re
+import reprlib
+RE_WORD = re.compile('\w+')
+
+class Sentence:
+    def __init__(self, text):
+        self.text = text
+        self.words = RE_WORD.findall(text)
+    def __repr__(self):
+        return 'Sentence(%s)' % reprlib.repr(self.text)
+    def __iter__(self):
+        return SentenceIterator(self.words)
+
+
+class SentenceIterator:
+    def __init__(self, words):
+        self.words = words
+        self.index = 0
+    def __next__(self):
+        try:
+            word = self.words[self.index]
+        except IndexError:
+            raise StopIteration()
+        self.index += 1
+        return word
+    def __iter__(self):
+        return self
+```
+
+如果在Sentence中实现\_\_next\_\_方法， 可以让Sentence同时成为可迭代对象和迭代器。但是这是一个相当糟糕的设计。**可迭代的对象一定不能是自身的迭代器**
+
+> 迭代器模式中指明， 迭代器应该有以下特点：
+> 1. 访问一个聚合对象的内容而无需暴露它的内部表示
+> 2. 支持对聚合对象的多种遍历(每次调用iter()都新建一个独立的迭代器)
+> 3. 为遍历不同的聚合结构提供统一的接口
+
+#### 14.4 生成器函数
+
+Python中实现上一节相同功能的方式是使用生成器函数代替额外实现的迭代器。
+
+```python
+import re
+import reprlib
+RE_WORD = re.compile('\w+')
+class Sentence:
+    def __init__(self, text):
+        self.text = text
+        self.words = RE_WORD.findall(text)
+    def __repr__(self):
+        return 'Sentence(%s)' % reprlib.repr(self.text)
+    def __iter__(self):
+        for word in self.words:
+            yield word
+        return
+```
+相比起上一节的实现简单许多。
+
+> 只要 Python 函数的定义体中有 yield 关键字，该函数就是生成器函数。调用生成器函数时，会返回一个生成器对象。也就是说，生成器函数是生成器工厂。
+
+#### 14.5 生成器的惰性实现
+
+re.finditer是re.findall的惰性版本， 返回的不是一个列表而是一个生成器，这样也能节省大量内存。
+
+```python
+import re
+import reprlib
+RE_WORD = re.compile('\w+')
+class Sentence:
+    def __init__(self, text):
+        self.text = text
+    def __repr__(self):
+        return 'Sentence(%s)' % reprlib.repr(self.text)
+    def __iter__(self):
+        for match in RE_WORD.finditer(self.text):
+            yield match.group()
+```
+
+使用finditer使得Sentence的元素变得可以惰性获得了。
+
+#### 14.6 生成器表达式
+
+下面使用生成器表达式构建生成器, 会使代码更加简洁
+```python
+import re
+import reprlib
+RE_WORD = re.compile('\w+')
+class Sentence:
+    def __init__(self, text):
+        self.text = text
+    def __repr__(self):
+        return 'Sentence(%s)' % reprlib.repr(self.text)
+    def __iter__(self):
+        return (match.group() for match in RE_WORD.finditer(self.text))
+```
+
+#### 14.7 yeild from 
+
 

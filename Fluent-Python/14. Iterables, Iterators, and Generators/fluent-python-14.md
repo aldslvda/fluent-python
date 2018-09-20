@@ -191,4 +191,69 @@ class Sentence:
 
 #### 14.7 yeild from 
 
+> 注: yeild from 是Python3.3中新出现的语法
 
+如果生成器函数需要产出另一个生成器生成的值，传统的解决方法是使用嵌套的 for 循
+环。  
+例如：
+
+```python
+>>> def chain(*iterables):
+...     for it in iterables:
+...         for i in it:
+...             yield i
+...
+>>> s = 'ABC'
+>>> t = tuple(range(3))
+>>> list(chain(s, t))
+['A', 'B', 'C', 0, 1, 2]
+```
+
+这个chain生成器函数吧操作依次交给各个可迭代对象处理。我们可以用下面的方法简化：
+
+```python
+>>> def chain(*iterables):
+...     for i in iterables:
+...     yield from i
+...
+>>> list(chain(s, t))
+['A', 'B', 'C', 0, 1, 2]
+```
+
+可以看出，yield from i 完全代替了内层的 for 循环， 使得代码简化很多。
+
+#### 14.8 深入分析iter()函数
+在 Python 中迭代对象 x 时会调用 iter(x), 这是上文中我们反复提到的, 这也是iter()最常见的用法。   
+
+iter 函数还有一个鲜为人知的用法：传入两个参数，使用常规的函数或任何可调用的对象创建迭代器。这样使用时，第一个参数必须是可调用的对象，用于不断调用（没有参数），产出各个值；第二个值是哨符，这是个标记值，当可调用的对象返回这个值时，触发迭代器抛出 StopIteration 异常，而不产出哨符。
+
+例子：
+```python
+# 掷骰子直到掷出1点
+from random import randint
+def d6():
+    return randint(1, 6)
+
+d6_iter = iter(d6, 1)
+for roll in d6_iter:
+    print(roll)
+```
+
+#### 14.9 生成器当成协程
+
+> Python 2.5 实现了“PEP 342 — Coroutines via Enhanced Generators”（https://www.python.org/dev/peps/pep-0342/ ）。这个提案为生成器对象添加了额外的方法和功能，其中最值得关注的是 .send() 方法， 这个函数让生成器变身为**协程**。
+
+与 .\_\_next\_\_() 方法一样，.send() 方法致使生成器前进到下一个 yield 语句。不过，.send() 方法还允许使用生成器的客户把数据发给自己，即不管传给 .send() 方法什么参数，那个参数都会成为生成器函数定义体中对应的 yield 表达式的值。也就是说，.send() 方法允许在客户代码和生成器之间双向交换数据。而 .\_\_next\_\_() 方法只允许客户从生成器中获取数据。
+
+> - 生成器用于生成供迭代的数据
+> - 协程是数据的消费者
+> - 为了避免脑袋炸裂，不能把这两个概念混为一谈
+> - 协程与迭代无关
+> - 注意，虽然在协程中会使用 yield 产出值，但这与迭代无关
+>       
+>    <div align = right>——David Beazley  “A Curious Course on Coroutines and Concurrency”</div>
+
+基于这几点， 本章不讨论协程![233](https://github.com/aldslvda/blog-images/blob/master/acfun_emoji/11.png?raw=true)
+
+#### 14.9 小结
+Python 语言对迭代的支持非常深入, Python 已经融合（grok）了迭代器。Python 从语义上集成迭代器模式是个很好的例证，说明设计模式在各种编程语言中使用的方式并不相同。
